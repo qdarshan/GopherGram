@@ -8,12 +8,18 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	"github.com/qdarshan/GopherGram/internal/database"
 	"github.com/qdarshan/GopherGram/internal/handlers"
 )
 
 func main() {
-	err := database.ConnectDB()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	err = database.ConnectDB()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}

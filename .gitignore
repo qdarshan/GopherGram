@@ -1,0 +1,41 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go workspace file
+go.work
+
+# Environment files
+.env
+*.env
+!.env.example
+
+# IDE-specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Backup files
+*.bak
+*.gho
+*.ori
+*.orig
+*.tmp
+
+# Logs
+*.log
+
+# Build directory
+build/
+bin/
+
+# Temporary files
+tmp/
+temp/
+
+# Go module files (keep go.mod and go.sum)
+go.sum
