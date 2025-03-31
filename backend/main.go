@@ -8,9 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 	"github.com/qdarshan/GopherGram/internal/database"
 	"github.com/qdarshan/GopherGram/internal/handlers"
+	"github.com/qdarshan/GopherGram/internal/middleware"
 )
 
 func main() {
@@ -42,18 +44,27 @@ func main() {
 		os.Exit(0)
 	}()
 
-	http.HandleFunc("/home", handlers.HomeHandler)
-	http.HandleFunc("/compose/post", handlers.ComposePostHandler)
-	http.HandleFunc("/delete/{id}", handlers.DeletePostHandler)
-	http.HandleFunc("/edit/{id}", handlers.EditPostHandler)
-	http.HandleFunc("/{username}", handlers.ProfileHandler)
-	http.HandleFunc("/{username}/status/{id}", handlers.ViewPostHandler)
-	http.HandleFunc("/{username}/upvote/{id}", handlers.UpvoteHandler)
-	http.HandleFunc("/{username}/downvote/{id}", handlers.DownvoteHandler)
-	http.HandleFunc("/user/add", handlers.CreateUserHandler)
+	r := chi.NewRouter()
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("welcome"))
+	})
+
+	r.Route("/api/v1/users", func(r chi.Router) {
+		r.Post("/register", handlers.CreateUserHandler)
+		r.Post("/login", handlers.LoginHandler)
+	})
+
+	r.Get("/home", handlers.HomeHandler)
+	r.With(middleware.JWTMiddleware).Post("/compose/post", handlers.ComposePostHandler)
+	r.Delete("/delete/{id}", handlers.DeletePostHandler)
+	r.Put("/edit/{id}", handlers.EditPostHandler)
+	r.Get("/{username}", handlers.ProfileHandler)
+	r.Get("/{username}/status/{id}", handlers.ViewPostHandler)
+	r.Post("/{username}/upvote/{id}", handlers.UpvoteHandler)
+	r.Post("/{username}/downvote/{id}", handlers.DownvoteHandler)
 
 	fmt.Println("Server starting on port 8080...")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8080", r); err != nil {
 		log.Fatalf("HTTP server ListenAndServe: %v", err)
 	}
 }

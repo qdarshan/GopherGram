@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"log"
 
 	"github.com/qdarshan/GopherGram/internal/database"
+	"github.com/qdarshan/GopherGram/internal/middleware"
 	"github.com/qdarshan/GopherGram/internal/models"
 	"github.com/qdarshan/GopherGram/internal/services"
 )
@@ -57,4 +59,9 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "User created successfully"})
+}
+
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	tkn, _ := middleware.GenerateToken("1", "test")
+	fmt.Fprintf(w, "login handler: "+tkn)
 }

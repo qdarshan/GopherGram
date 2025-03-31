@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"os"
 
 	_ "github.com/lib/pq"
@@ -30,6 +31,7 @@ func ConnectDB() error {
 
 func CheckError(msg string, err error) error {
 	if err != nil {
+		slog.Error(msg, "error: ", err)
 		return fmt.Errorf("%s:%w", msg, err)
 	}
 	return nil
