@@ -2,24 +2,21 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
+	"log/slog"
 	"net/http"
 
-	"log"
-
-	"github.com/qdarshan/GopherGram/internal/database"
 	"github.com/qdarshan/GopherGram/internal/middleware"
 	"github.com/qdarshan/GopherGram/internal/models"
 	"github.com/qdarshan/GopherGram/internal/services"
+	"github.com/qdarshan/GopherGram/internal/util"
 )
 
 func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Method not allowed"})
-		return
-	}
-
+	ctx := r.Context()
+	logger := util.LoggerFromContext(ctx).With(
+		slog.String("category", "handler"),
+		slog.String("method", "handlers.CreateUserHandler"),
+	)
 	var requestData struct {
 		Username    string `json:"username"`
 		Password    string `json:"password"`
@@ -31,6 +28,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
+		logger.Error("Error decoding request body", "error", err)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
 		return
@@ -46,12 +44,11 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	profile.Bio = requestData.Bio
 	profile.DateOfBirth = requestData.DateOfBirth
 
-	userRepo := database.NewUserRepository(database.DB)
-	userService := services.NewUserService(userRepo)
+	userService := services.NewUserService()
 
-	err = userService.CreateUser(&user, &profile)
+	err = userService.CreateUser(ctx, &user, &profile)
 	if err != nil {
-		log.Printf("Error creating user: %v", err)
+		logger.Error("Error creating user", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create user"})
 		return
@@ -62,6 +59,45 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	tkn, _ := middleware.GenerateToken("1", "test")
-	fmt.Fprintf(w, "login handler: "+tkn)
+	ctx := r.Context()
+	logger := util.LoggerFromContext(ctx).With(
+		slog.String("category", "handler"),
+		slog.String("method", "handlers.LoginHandler"),
+	)
+	// defer util.LogFnDuration(logger, time.Now())
+
+	var user models.User
+
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+		return
+	}
+
+	userService := services.NewUserService()
+	isValid, loggedInUser, err := userService.VerifyUser(ctx, user)
+	if err != nil {
+		logger.Error("Login verification error", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if !isValid {
+		logger.Warn("Invalid login attempt", "user", user.Username)
+		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+		return
+	} else {
+		logger.Info("user logged in successfully", "user", loggedInUser.Username, "userId", loggedInUser.Id)
+		tkn, err := middleware.GenerateToken(loggedInUser.Id, loggedInUser.Username)
+
+		if err != nil {
+			logger.Error("Error generating token", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"token": tkn})
+	}
 }

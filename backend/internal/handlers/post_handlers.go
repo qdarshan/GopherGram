@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 )
 
@@ -11,6 +13,9 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 func ComposePostHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "compose your posts")
+	slog.Error("Failed to save post")
+	w.WriteHeader(http.StatusInternalServerError)
+	json.NewEncoder(w).Encode(map[string]string{"error": "Failed to save post"})
 }
 
 func DeletePostHandler(w http.ResponseWriter, r *http.Request) {

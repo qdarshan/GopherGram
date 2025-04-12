@@ -59,6 +59,7 @@ func InitializeSchema() error {
 		CREATE TABLE IF NOT EXISTS posts (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			user_id UUID NOT NULL REFERENCES users(id),
+			title TEXT,
 			content TEXT,
 			visibility VARCHAR(10),
 			upvote INTEGER DEFAULT 0,
