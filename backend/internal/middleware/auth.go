@@ -4,15 +4,13 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/qdarshan/GopherGram/internal/util"
+	"github.com/spf13/viper"
 )
-
-var jwtSecret = []byte(string(os.Getenv("JWT_SECRET")))
 
 type Claims struct {
 	UserId   string `json:"user_id"`
@@ -21,6 +19,7 @@ type Claims struct {
 }
 
 func GenerateToken(userId string, username string) (string, error) {
+	var jwtSecret = []byte(viper.GetString("JWT_SECRET"))
 	expirationTime := time.Now().Add(1 * time.Hour)
 	claims := &Claims{
 		UserId:   userId,
@@ -38,6 +37,7 @@ func GenerateToken(userId string, username string) (string, error) {
 }
 
 func JWTMiddleware(next http.Handler) http.Handler {
+	var jwtSecret = []byte(viper.GetString("JWT_SECRET"))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {

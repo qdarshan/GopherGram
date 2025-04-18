@@ -16,9 +16,8 @@ type UserService struct {
 	userRepository *database.UserRepository
 }
 
-func NewUserService() *UserService {
-	userRepository := database.NewUserRepository(database.DB)
-	return &UserService{userRepository: userRepository}
+func NewUserService(repository *database.UserRepository) *UserService {
+	return &UserService{userRepository: repository}
 }
 
 func (us *UserService) CreateUser(ctx context.Context, user *models.User, profile *models.UserProfile) error {

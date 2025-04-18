@@ -32,6 +32,7 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		requestLogger := slog.New(jsonLogHandler).With(
 			slog.String("transactionId", transactionId),
 			slog.String("service", "gopherGram"),
+			slog.String("version", viper.GetString("VERSION")),
 		)
 
 		ctx := context.WithValue(r.Context(), util.TransactionIDKey, transactionId)

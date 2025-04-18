@@ -1,13 +1,18 @@
 # GOPHERGRAM
 ## routes
-- /home (contains the feed)
-- /compose/post (create a post)
-- /{username} (displays profile of user, with all his profile)
-- /{username}/status/{id} (particular post of a user)
-- /delete/{id} (delete post)
-- /edit/{id} (edit post)
-- /{username}/upvote/{id} (upvote post)
-- /{username}/downvote/{id} (downvote post)
+- POST /api/v1/posts (Create Post)
+- GET /api/v1/posts (Get Feed)
+- GET /api/v1/posts/{postID} (Get specific post)
+- PUT /api/v1/posts/{postID} (Edit Post)
+- DELETE /api/v1/posts/{postID} (Delete Post)
+- POST /api/v1/posts/{postID}/vote (Upvote/Downvote a post)
+
+- GET /api/v1/users/{username} (Get user profile)
+- GET /api/v1/users/{username}/posts (Get posts by a specific user)
+
+- POST /api/v1/users/register (Register user)
+- POST /api/v1/users/login (Login user)
+
 
 ### home handler
 - retrieve all the public posts

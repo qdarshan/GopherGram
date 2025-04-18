@@ -1,68 +1,45 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
+	"context"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/qdarshan/GopherGram/internal/database"
-	"github.com/qdarshan/GopherGram/internal/handlers"
-	"github.com/qdarshan/GopherGram/internal/middleware"
-	"github.com/qdarshan/GopherGram/internal/util"
+	"github.com/qdarshan/GopherGram/internal/bootstrap"
+	"github.com/qdarshan/GopherGram/internal/server"
 )
 
 func main() {
-	util.InitConfigPath(".")
 
-	err := database.ConnectDB()
+	app, err := bootstrap.Bootstrap(".")
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		slog.Error("Failed to bootstrap application", "error", err)
+		os.Exit(1)
 	}
-	err = database.InitializeSchema()
-	if err != nil {
-		log.Fatalf("Failed to initialize schema: %v", err)
-	}
-
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		sig := <-sigChan
-		fmt.Printf("Received signal: %v. Closing database connection...\n", sig)
-		if err := database.DB.Close(); err != nil {
-			log.Printf("Error closing database connection: %v", err)
-		} else {
-			fmt.Println("Database connection closed.")
+	defer func() {
+		if err := app.Close(); err != nil {
+			os.Exit(1)
 		}
-		os.Exit(0)
 	}()
 
-	r := chi.NewRouter()
-	r.Use(middleware.LoggingMiddleware)
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("welcome"))
-	})
+	srv := server.NewServer("", app.Router)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	r.Route("/api/v1/users", func(r chi.Router) {
-		r.Post("/register", handlers.CreateUserHandler)
-		r.Post("/login", handlers.LoginHandler)
-	})
+	go func() {
+		if err := srv.Start(); err != nil {
+			os.Exit(1)
+		}
+	}()
 
-	r.Get("/home", handlers.HomeHandler)
-	r.With(middleware.JWTMiddleware).Post("/compose/post", handlers.ComposePostHandler)
-	r.Delete("/delete/{id}", handlers.DeletePostHandler)
-	r.Put("/edit/{id}", handlers.EditPostHandler)
-	r.Get("/{username}", handlers.ProfileHandler)
-	r.Get("/{username}/status/{id}", handlers.ViewPostHandler)
-	r.Post("/{username}/upvote/{id}", handlers.UpvoteHandler)
-	r.Post("/{username}/downvote/{id}", handlers.DownvoteHandler)
-
-	fmt.Println("Server starting on port 8080...")
-	if err := http.ListenAndServe(":8080", r); err != nil {
-		log.Fatalf("HTTP server ListenAndServe: %v", err)
+	<-ctx.Done()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		slog.Error("Server shutdown failed", "error", err)
+		os.Exit(1)
 	}
 }

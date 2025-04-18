@@ -30,7 +30,16 @@ func writeJSON(w http.ResponseWriter, status int, data any, logger *slog.Logger)
 	}
 }
 
-func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+type UserHandler struct {
+	userService *services.UserService
+}
+
+func NewUserHandler(userService *services.UserService) *UserHandler {
+	return &UserHandler{userService: userService}
+}
+
+func (uh *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+
 	ctx := r.Context()
 	logger := util.LoggerFromContext(ctx).With(
 		slog.String("category", "handler"),
@@ -86,9 +95,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		DateOfBirth: req.DateOfBirth,
 	}
 
-	userService := services.NewUserService()
-
-	if err := userService.CreateUser(ctx, user, profile); err != nil {
+	if err := uh.userService.CreateUser(ctx, user, profile); err != nil {
 		logger.Error("Failed to create user", "username", req.Username, "error", err)
 		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "Failed to create user"}, logger)
 		return
@@ -100,8 +107,9 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	util.LogFnDuration(logger, startTime)
 }
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
+
 	ctx := r.Context()
 	logger := util.LoggerFromContext(ctx).With(
 		slog.String("category", "handler"),
@@ -121,8 +129,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "Username and password are required"}, logger)
 	}
 
-	userService := services.NewUserService()
-	isValid, loggedInUser, err := userService.VerifyUser(ctx, user)
+	isValid, loggedInUser, err := uh.userService.VerifyUser(ctx, user)
 	if err != nil {
 		logger.Error("Failed to verify user", "username", user.Username, "error", err)
 		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "Internal server error"}, logger)
@@ -149,5 +156,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}, logger)
 
 	util.LogFnDuration(logger, startTime)
+
+}
+
+func (uh *UserHandler) GetUserPostsHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+func (uh *UserHandler) GetUserProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 }

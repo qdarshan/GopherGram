@@ -12,28 +12,27 @@ import (
 var DB *sql.DB
 
 func ConnectDB() error {
-	host := viper.Get("DB_HOST")
-	port := viper.Get("DB_PORT")
-	user := viper.Get("DB_USER")
-	password := viper.Get("DB_PASSWORD")
-	dbname := viper.Get("DATABASE")
+	host := viper.GetString("DB_HOST")
+	port := viper.GetString("DB_PORT")
+	user := viper.GetString("DB_USER")
+	password := viper.GetString("DB_PASSWORD")
+	dbname := viper.GetString("DATABASE")
 
 	psqlconn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
 	db, err := sql.Open("postgres", psqlconn)
-	CheckError("Error opening connection to db", err)
+	if err != nil {
+		slog.Error("Error opening connection to db", "error", err)
+		return fmt.Errorf("opening connection to db: %w", err)
+	}
+
 	err = db.Ping()
-	CheckError("Error pinging the db", err)
+	if err != nil {
+		slog.Error("Error pinging the db", "error", err)
+		return fmt.Errorf("pinging the db: %w", err)
+	}
 	DB = db
 	fmt.Println("Successfully connected to PostgreSQL!")
-	return nil
-}
-
-func CheckError(msg string, err error) error {
-	if err != nil {
-		slog.Error(msg, "error: ", err)
-		return fmt.Errorf("%s:%w", msg, err)
-	}
 	return nil
 }
 
@@ -78,6 +77,9 @@ func InitializeSchema() error {
 	`
 
 	_, err := DB.Exec(CREATE_USER_TABLE_SQL)
-	CheckError("Error creating users table", err)
+	if err != nil {
+		slog.Error("Error creating users table", "error", err)
+		return fmt.Errorf("creating users table: %w", err)
+	}
 	return nil
 }
