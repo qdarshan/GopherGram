@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -49,12 +49,12 @@ func (us *UserService) VerifyUser(ctx context.Context, user models.User) (bool, 
 	logger.Debug("verifying user credentials")
 	dbUser, err := us.userRepository.GetUserByUsername(ctx, user.Username)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			logger.Warn("user not found")
+		if errors.Is(err, database.ErrNotFound) {
+			logger.Warn("user not found during verification")
 			return false, nil, nil
 		}
-		logger.Error("failed to get user by username", "error", err)
-		return false, nil, fmt.Errorf("database error: %w", err)
+		logger.Error("failed to get user by username during verification", "error", err)
+		return false, nil, fmt.Errorf("database error during verification: %w", err)
 	}
 
 	if verifyPassword(user.Password, dbUser.Password) {

@@ -2,33 +2,18 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/qdarshan/GopherGram/internal/database"
 	"github.com/qdarshan/GopherGram/internal/middleware"
 	"github.com/qdarshan/GopherGram/internal/models"
 	"github.com/qdarshan/GopherGram/internal/services"
 	"github.com/qdarshan/GopherGram/internal/util"
 )
-
-type errorResponse struct {
-	Error string `json:"error"`
-}
-
-type successResponse struct {
-	Message string `json:"message,omitempty"`
-	Token   string `json:"token,omitempty"`
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any, logger *slog.Logger) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		logger.Error("Failed to encode JSON response", "error", err)
-	}
-}
 
 type UserHandler struct {
 	userService *services.UserService
@@ -58,28 +43,33 @@ func (uh *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request)
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Warn("Invalid request body", "error", err)
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "Invalid request body"}, logger)
+		WriteJSON(w, http.StatusBadRequest, NewErrorResponse("Invalid request body"), logger)
+		util.LogFnDuration(logger, startTime)
 		return
 	}
 
 	if req.Username == "" || req.Password == "" {
 		logger.Warn("Missing required fields")
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "Username and password are required"}, logger)
+		WriteJSON(w, http.StatusBadRequest, NewErrorResponse("Username and password are required"), logger)
+		util.LogFnDuration(logger, startTime)
 		return
 	}
 	if len(req.Username) < 3 || len(req.Username) > 50 {
 		logger.Warn("Invalid username length", "username", req.Username)
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "Username must be 3-50 characters"}, logger)
+		WriteJSON(w, http.StatusBadRequest, NewErrorResponse("Username must be 3-50 characters"), logger)
+		util.LogFnDuration(logger, startTime)
 		return
 	}
 	if len(req.Password) < 6 {
 		logger.Warn("Password too short")
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "Password must be at least 6 characters"}, logger)
+		WriteJSON(w, http.StatusBadRequest, NewErrorResponse("Password must be at least 6 characters"), logger)
+		util.LogFnDuration(logger, startTime)
 		return
 	}
 	if req.Email != "" && !strings.Contains(req.Email, "@") {
 		logger.Warn("Invalid email format", "email", req.Email)
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "Invalid email format"}, logger)
+		WriteJSON(w, http.StatusBadRequest, NewErrorResponse("Invalid email format"), logger)
+		util.LogFnDuration(logger, startTime)
 		return
 	}
 
@@ -96,14 +86,24 @@ func (uh *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := uh.userService.CreateUser(ctx, user, profile); err != nil {
-		logger.Error("Failed to create user", "username", req.Username, "error", err)
-		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "Failed to create user"}, logger)
+		var duplicateErr *database.ErrDuplicateEntry
+		if errors.As(err, &duplicateErr) {
+			logger.Warn("Duplicate entry conflict", "field", duplicateErr.Field, "value", duplicateErr.Value, "error", err)
+			WriteJSON(w, http.StatusConflict, NewErrorResponse(duplicateErr.Error()), logger)
+		} else {
+			logger.Error("Failed to create user due to internal error", "username", req.Username, "error", err)
+			WriteJSON(w, http.StatusInternalServerError, NewErrorResponse("An internal error occurred. Please try again later."), logger)
+		}
+		util.LogFnDuration(logger, startTime)
 		return
 	}
 
 	logger.Info("User created", "username", req.Username)
-	writeJSON(w, http.StatusCreated, successResponse{Message: "User created successfully"}, logger)
-
+	createdUserData := map[string]string{
+		"id":       user.Id,
+		"username": user.Username,
+	}
+	WriteJSON(w, http.StatusCreated, NewSuccessResponse("User created successfully", "", createdUserData), logger)
 	util.LogFnDuration(logger, startTime)
 }
 
@@ -120,25 +120,30 @@ func (uh *UserHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		logger.Warn("Invalid request body", "error", err)
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "Invalid request body"}, logger)
+		WriteJSON(w, http.StatusBadRequest, NewErrorResponse("Invalid request body"), logger)
+		util.LogFnDuration(logger, startTime)
 		return
 	}
 
 	if user.Username == "" || user.Password == "" {
 		logger.Warn("Missing required fields")
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "Username and password are required"}, logger)
+		WriteJSON(w, http.StatusBadRequest, NewErrorResponse("Username and password are required"), logger)
+		util.LogFnDuration(logger, startTime)
+		return
 	}
 
 	isValid, loggedInUser, err := uh.userService.VerifyUser(ctx, user)
 	if err != nil {
 		logger.Error("Failed to verify user", "username", user.Username, "error", err)
-		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "Internal server error"}, logger)
+		WriteJSON(w, http.StatusInternalServerError, NewErrorResponse("Internal server error"), logger)
+		util.LogFnDuration(logger, startTime)
 		return
 	}
 
 	if !isValid || loggedInUser == nil {
 		logger.Warn("Invalid login attempt", "username", user.Username)
-		writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "Invalid username or password"}, logger)
+		WriteJSON(w, http.StatusUnauthorized, NewErrorResponse("Invalid username or password"), logger)
+		util.LogFnDuration(logger, startTime)
 		return
 	}
 
@@ -146,14 +151,15 @@ func (uh *UserHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logger.Error("Failed to generate token", "username", user.Username, "error", err)
-		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "Failed to generate token"}, logger)
+		WriteJSON(w, http.StatusInternalServerError, NewErrorResponse("Failed to generate token"), logger)
 		return
 	}
 	logger.Info("user logged in successfully", "user", loggedInUser.Username, "userId", loggedInUser.Id)
-	writeJSON(w, http.StatusOK, successResponse{
-		Message: "Login successful",
-		Token:   tkn,
-	}, logger)
+	WriteJSON(w, http.StatusOK, NewSuccessResponse(
+		"Login successful",
+		tkn,
+		nil,
+	), logger)
 
 	util.LogFnDuration(logger, startTime)
 
