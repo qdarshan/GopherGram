@@ -9,19 +9,16 @@ import (
 	"syscall"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/joho/godotenv"
 	"github.com/qdarshan/GopherGram/internal/database"
 	"github.com/qdarshan/GopherGram/internal/handlers"
 	"github.com/qdarshan/GopherGram/internal/middleware"
+	"github.com/qdarshan/GopherGram/internal/util"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	util.InitConfigPath(".")
 
-	err = database.ConnectDB()
+	err := database.ConnectDB()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}

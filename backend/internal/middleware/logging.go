@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/qdarshan/GopherGram/internal/util"
+	"github.com/spf13/viper"
 )
 
 type loggingResponseWriter struct {
@@ -31,7 +32,6 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		requestLogger := slog.New(jsonLogHandler).With(
 			slog.String("transactionId", transactionId),
 			slog.String("service", "gopherGram"),
-			slog.String("version", "1.0"),
 		)
 
 		ctx := context.WithValue(r.Context(), util.TransactionIDKey, transactionId)
