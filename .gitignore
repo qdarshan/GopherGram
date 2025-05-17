@@ -5,6 +5,13 @@
 *.so
 *.dylib
 
+# Frontend
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+
 # Go workspace file
 go.work
 
