@@ -6,13 +6,12 @@ export const Route = createFileRoute("/login")({
 
 function RouteComponent() {
   return (
-    <div className="h-screen w-screen bg-zinc-100 flex flex-col items-center justify-center">
+    <div className="h-full w-full bg-zinc-100 flex flex-col items-center justify-center overflow-hidden">
       <div className="bg-zinc-200 p-8 rounded-lg shadow-md w-96">
-        <div>
-          <span>Fyr login</span>
+        <div className="mb-4">
+          <span className="text-xl font-semibold">Fyr Login</span>
         </div>
-        
-        <form onSubmit={handleLoginSubmit} className="">
+        <form onSubmit={handleLoginSubmit}>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Username/Email:
