@@ -1,51 +1,106 @@
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { createFileRoute } from "@tanstack/react-router";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export const Route = createFileRoute("/login")({
   component: RouteComponent,
 });
 
+const formSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters long" }),
+});
+
 function RouteComponent() {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = () => {
+    alert("Login successful!");
+  };
+
   return (
-    <div className="h-full w-full bg-zinc-100 flex flex-col items-center justify-center overflow-hidden">
-      <div className="bg-zinc-200 p-8 rounded-lg shadow-md w-96">
-        <div className="mb-4">
-          <span className="text-xl font-semibold">Fyr Login</span>
-        </div>
-        <form onSubmit={handleLoginSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Username/Email:
-            </label>
-            <input
-              type="text"
-              className="w-full mt-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    <div className="flex h-full w-full items-center justify-center bg-slate-200">
+      <div className="bg-white rounded shadow-lg p-10 w-full max-w-md">
+        <h2 className="text-3xl font-semibold text-gray-800 mb-6 text-center">
+          Login
+        </h2>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">
+                    Email
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="your@email.com"
+                      className="border rounded-md shadow-sm focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs text-gray-500">
+                    Enter your registered email address.
+                  </FormDescription>
+                  <FormMessage className="text-red-500 text-xs" />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Password:
-            </label>
-            <input
-              type="password"
-              className="w-full mt-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">
+                    Password
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="********"
+                      className="border rounded-md shadow-sm focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs text-gray-500">
+                    Enter your secure password.
+                  </FormDescription>
+                  <FormMessage className="text-red-500 text-xs" />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div className="mb-4">
-            <button
+            <Button
               type="submit"
-              className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-slate-500 text-white font-semibold rounded-md shadow-md hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
             >
-              Login
-            </button>
-          </div>
-        </form>
+              Log In
+            </Button>
+          </form>
+        </Form>
       </div>
     </div>
   );
-}
-
-function handleLoginSubmit() {
-  alert("loging in");
 }

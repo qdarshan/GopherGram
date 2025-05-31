@@ -1,11 +1,15 @@
+import { useTheme } from "@/lib/ThemeProvider";
 import { Link } from "@tanstack/react-router";
+import { MoonIcon, SunIcon } from "lucide-react";
 
 export default function Header() {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header className="p-2 bg-white flex justify-between gap-2 shadow">
       <nav className="flex flex-row w-full">
         <div className="basis-2/12 sm:basis-3/12 ">
-          <div className="text-orange-600 font-extrabold ">
+          <div className="text-orange-600 font-bold text-xl">
             <Link to="/">Fyr</Link>
           </div>
         </div>
@@ -17,6 +21,16 @@ export default function Header() {
             <Link to="/login">Login</Link>
           </div>
         </div>
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-md hover:bg-accent"
+        >
+          {theme === "dark" ? (
+            <SunIcon className="h-5 w-5" />
+          ) : (
+            <MoonIcon className="h-5 w-5" />
+          )}
+        </button>
       </nav>
     </header>
 
