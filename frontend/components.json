@@ -8,6 +8,7 @@
     "css": "src/styles.css",
     "baseColor": "slate",
     "cssVariables": true,
+    "darkMode":"class",
     "prefix": ""
   },
   "aliases": {

@@ -1,33 +1,5 @@
-import PostItem from "./Post";
-
-type Comment = {
-  id: number;
-  content: string;
-  author: string;
-};
-
-type User = {
-  username: string;
-  displayName: string;
-  bio: string;
-  followers: number;
-  following: number;
-  posts: number;
-  joinDate: string;
-  verified: boolean;
-  avatar: string;
-};
-
-type Post = {
-  id: number;
-  title: string;
-  content: string;
-  vote: number;
-  comment: number;
-  comments?: Comment[];
-  timestamp: string;
-  user: User;
-};
+import type { Post } from "@/types/post";
+import PostItem from "./PostItem";
 
 const dummyPosts: Post[] = [
   {
@@ -42,9 +14,10 @@ const dummyPosts: Post[] = [
         id: 1,
         content: "This is a comment",
         author: "user1",
+        timestamp: "2025-05-31T11:20:28.776Z",
       },
     ],
-    timestamp: "2025-05-17T12:00:00Z",
+    timestamp: "2025-05-31T11:20:28.776Z",
     user: {
       username: "user2",
       displayName: "John Doe",
@@ -69,11 +42,13 @@ const dummyPosts: Post[] = [
         id: 2,
         content: "Loving it too! The hooks are a game-changer.",
         author: "coder_guru",
+        timestamp: "2025-05-31T11:20:28.776Z",
       },
       {
         id: 3,
         content: "Any performance tips for large apps?",
         author: "dev_ninja",
+        timestamp: "2025-05-31T11:20:28.776Z",
       },
     ],
     timestamp: "2025-05-18T09:30:00Z",
@@ -101,6 +76,7 @@ const dummyPosts: Post[] = [
         id: 4,
         content: "TypeScript is a lifesaver! No more runtime surprises.",
         author: "ts_fan",
+        timestamp: "2025-05-31T11:20:28.776Z",
       },
     ],
     timestamp: "2025-05-19T15:45:00Z",
@@ -128,11 +104,13 @@ const dummyPosts: Post[] = [
         id: 5,
         content: "Grid for 2D layouts, Flexbox for 1D. That's my rule!",
         author: "design_pro",
+        timestamp: "2025-05-31T11:20:28.776Z",
       },
       {
         id: 6,
         content: "Flexbox is my go-to for quick prototypes.",
         author: "ui_lover",
+        timestamp: "2025-05-31T11:20:28.776Z",
       },
     ],
     timestamp: "2025-05-20T11:20:00Z",
@@ -160,11 +138,13 @@ const dummyPosts: Post[] = [
         id: 7,
         content: "Congrats! Check out 'good first issue' tags on GitHub.",
         author: "oss_enthusiast",
+        timestamp: "2025-05-31T11:20:28.776Z",
       },
       {
         id: 8,
         content: "Amazing! What's the project about?",
         author: "curious_dev",
+        timestamp: "2025-05-31T11:20:28.776Z",
       },
     ],
     timestamp: "2025-05-21T18:10:00Z",
@@ -191,207 +171,3 @@ export default function Feed() {
     </div>
   );
 }
-
-// export default function Feed() {
-//   const navigate = useNavigate();
-//   const [showCard, setShowCard] = useState(false);
-//   const [position, setPosition] = useState({ x: 0, y: 0 });
-
-//   const handleMouseMove = (e: React.MouseEvent) => {
-//     setPosition({ x: e.clientX, y: e.clientY });
-//   };
-
-//   const handlePostClick = (postId: number) => {
-//     navigate({
-//       to: "/posts/$postId",
-//       params: { postId: postId.toString() },
-//     });
-//   };
-
-//   return (
-//     <div className="space-y-6 px-4 py-6" onMouseMove={handleMouseMove}>
-//       {dummyPosts.map((post) => (
-//         <div
-//           key={post.id}
-//           className="bg-white p-6 rounded-lg shadow hover:shadow-md hover:bg-zinc-50 transition-shadow cursor-pointer"
-//           onClick={() => handlePostClick(post.id)}
-//         >
-//           <div className="flex items-start gap-4">
-//             <Avatar>
-//               <AvatarImage src="https://avatar.iran.liara.run/public" />
-//               <AvatarFallback>CN</AvatarFallback>
-//             </Avatar>
-
-//             <div className="flex-1">
-//               <div
-//                 className="flex items-center gap-2 text-gray-600 mb-1"
-//                 onClick={(e) => e.stopPropagation()}
-//                 onMouseEnter={() => setShowCard(true)}
-//                 onMouseLeave={() => setShowCard(false)}
-//               >
-//                 <div>
-//                   <Link to="/$username" params={{ username: post.username }}>
-//                     <span className="text-sm font-medium text-gray-800 hover:underline hover:text-red-500">
-//                       {post.author}
-//                     </span>
-//                   </Link>
-//                   <span className="text-sm text-gray-500">@{post.author}</span>
-//                   <span
-//                     className="text-sm text-gray-500"
-//                     title={new Date(post.timestamp).toLocaleString()}
-//                   >
-//                     {timeAgo(post.timestamp)}
-//                   </span>
-//                 </div>
-//                 {showCard && (
-//                   <div
-//                     className="absolute bg-white border border-gray-300 rounded shadow-md p-2"
-//                     style={{ top: position.y + 10, left: position.x + 10 }}
-//                   >
-//                     <div className="flex items-start justify-between mb-3">
-//                       <div className="flex items-center space-x-3">
-//                         <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
-//                           {user.avatar}
-//                         </div>
-//                         <div>
-//                           <div className="flex items-center space-x-1">
-//                             <h3 className="font-bold text-gray-900 dark:text-white">
-//                               {user.displayName}
-//                             </h3>
-//                             {user.verified && (
-//                               <svg
-//                                 className="w-4 h-4 text-blue-500"
-//                                 fill="currentColor"
-//                                 viewBox="0 0 20 20"
-//                               >
-//                                 <path
-//                                   fillRule="evenodd"
-//                                   d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-//                                   clipRule="evenodd"
-//                                 />
-//                               </svg>
-//                             )}
-//                           </div>
-//                           <p className="text-gray-500 dark:text-gray-400 text-sm">
-//                             @{user.username}
-//                           </p>
-//                         </div>
-//                       </div>
-//                       <button className="bg-black dark:bg-white text-white dark:text-black px-4 py-1.5 rounded-full text-sm font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">
-//                         Follow
-//                       </button>
-//                     </div>
-
-//                     {/* Bio */}
-//                     {user.bio && (
-//                       <p className="text-gray-900 dark:text-white text-sm mb-3 leading-relaxed">
-//                         {user.bio}
-//                       </p>
-//                     )}
-
-//                     {/* Stats */}
-//                     <div className="flex space-x-4 text-sm mb-2">
-//                       <div>
-//                         <span className="font-bold text-gray-900 dark:text-white">
-//                           {user.following.toLocaleString()}
-//                         </span>
-//                         <span className="text-gray-500 dark:text-gray-400 ml-1">
-//                           Following
-//                         </span>
-//                       </div>
-//                       <div>
-//                         <span className="font-bold text-gray-900 dark:text-white">
-//                           {user.followers.toLocaleString()}
-//                         </span>
-//                         <span className="text-gray-500 dark:text-gray-400 ml-1">
-//                           Followers
-//                         </span>
-//                       </div>
-//                       <div>
-//                         <span className="font-bold text-gray-900 dark:text-white">
-//                           {user.posts}
-//                         </span>
-//                         <span className="text-gray-500 dark:text-gray-400 ml-1">
-//                           Posts
-//                         </span>
-//                       </div>
-//                     </div>
-
-//                     {/* Join date */}
-//                     <p className="text-gray-500 dark:text-gray-400 text-xs">
-//                       {user.joinDate}
-//                     </p>
-//                   </div>
-//                 )}
-//               </div>
-
-//               {/* Title */}
-//               <h2 className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer">
-//                 {post.title}
-//               </h2>
-
-//               {/* Body */}
-//               <p className="text-gray-700 text-sm mb-4 cursor-pointer">
-//                 {post.content}
-//               </p>
-
-//               {/* Actions */}
-//               <div className="flex items-center gap-4 text-sm text-gray-600">
-//                 {/* Vote */}
-//                 <div
-//                   className="flex items-center gap-1 bg-zinc-200 px-3 py-1 rounded-full hover:shadow hover:bg-zinc-300"
-//                   onClick={(e) => e.stopPropagation()}
-//                 >
-//                   <ArrowBigUp
-//                     className="cursor-pointer hover:text-red-500"
-//                     onClick={() => {
-//                       alert("up vote");
-//                     }}
-//                   />
-//                   <span className="font-medium">{getCount(post.vote)}</span>
-//                   <ArrowBigDown
-//                     className="cursor-pointer hover:text-blue-500"
-//                     onClick={() => {
-//                       alert("down vote");
-//                     }}
-//                   />
-//                 </div>
-
-//                 {/* Comments */}
-//                 <div onClick={(e) => e.stopPropagation()}>
-//                   <button
-//                     onClick={() => handlePostClick(post.id)}
-//                     className="group flex items-center gap-1 bg-zinc-200 hover:bg-zinc-300 px-3 py-1 rounded-full cursor-pointer"
-//                   >
-//                     <MessageCircle className="text-gray-500 group-hover:text-red-500 transition-colors" />
-//                     <span className="font-medium text-gray-700">
-//                       {getCount(post.comment)}
-//                     </span>
-//                   </button>
-//                 </div>
-
-//                 {/* Share */}
-//                 <div onClick={(e) => e.stopPropagation()}>
-//                   <button
-//                     onClick={() => {
-//                       alert("share");
-//                     }}
-//                     className="group flex items-center gap-1 bg-zinc-200 hover:bg-zinc-300 px-3 py-1 rounded-full cursor-pointer"
-//                   >
-//                     <Share2
-//                       className="text-gray-500 group-hover:text-red-500 transition-colors"
-//                       onClick={() => {
-//                         alert("share");
-//                       }}
-//                     />
-//                     <span className="font-medium">Share</span>
-//                   </button>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       ))}
-//     </div>
-//   );
-// }
